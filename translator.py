@@ -18,7 +18,10 @@ if __name__ == "__main__":
                     code_writer.write_arithmetic(parser.arg1)
                 elif (parser.command_type == Command.PUSH
                         or parser.command_type == Command.POP):
-                    code_writer.write_push_pop(parser.arg1, parser.arg2)
+                    code_writer.write_push_pop(
+                        parser.command_type,
+                        parser.arg1,
+                        parser.arg2)
                 parser.advance()
     else:
         raise InvalidFileTypeError("Argument should be a .vm file.")

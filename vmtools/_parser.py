@@ -4,6 +4,32 @@ from vmtools._exceptions import UnrecognisedKeywordError
 from vmtools._exceptions import MissingArgumentError
 
 class Parser:
+    """A VM parser.
+
+    Loads a file and extracts the commands and arguments from each
+    line in the file.
+
+    Attributes
+    ----------
+    has_more_commands : bool
+        True if more commands are left in the file to be parsed.
+    command : str
+        The current command being processed.
+    command_type : Command
+        The type of command being processed.
+    arg1 : str
+        The first argument to the current command.
+    arg2 : int
+        The second argument to the current command.
+    line : int
+        The current line number of the file being processed.
+
+    Methods
+    -------
+    advance()
+        Advance to the next command to be parsed. Should only be
+    """
+
     _CMAP = {"add": Command.ARITHMETIC,
              "sub": Command.ARITHMETIC,
              "neg": Command.ARITHMETIC,
@@ -37,6 +63,11 @@ class Parser:
         self._file.close()
 
     def advance(self):
+        """
+        Advance to the next command.
+
+        Should only be called if has_more_commands is True.
+        """
         while True:
             self._line += 1
             line = self._file.readline()
@@ -82,7 +113,6 @@ class Parser:
         if len(inputs) > 3:
             raise TooManyArgsError(self)
         self._command_type = Parser._CMAP.get(inputs[0])
-        print(self._command_type)
         if self._command_type is Command.ARITHMETIC:
             self._arg1, self._arg2 = inputs[0], None
         elif (self._command_type is Command.PUSH
