@@ -56,7 +56,8 @@ class Parser:
             if line:
                 self._command = strip_line(line)
                 if self._command:
-                    self._parsed_command = make_command(self._command.split())
+                    self._parsed_command = make_command(self._command,
+                                                        self._line)
                     return
             else:
                 self._has_more_commands = False
