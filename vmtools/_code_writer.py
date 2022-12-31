@@ -25,29 +25,6 @@ class CodeWriter:
     def __exit__(self, *args):
         self._file.close()
 
-    def write_arithmetic(self, command):
-        """
-        Write an arithmetic/logical command into the output file.
+    def write(self, command):
+        command.write(self._file)
 
-        Parameters
-        ----------
-        command : str
-            The type of arithmetic/logical operation.
-        """
-        self._file.write(command + "\n")
-
-    def write_push_pop(self, command, segment, index):
-        """
-        Write a push/pop command into the output file.
-
-        Parameters
-        ----------
-        command : Command
-            Either push or pop.
-        segment : str
-            The memory segment where the command operates.
-        index : int
-            Memory location within the segment where the command
-            operates.
-        """
-        self._file.write(segment + " " + index + "\n")

@@ -1,4 +1,4 @@
-from vmtools._commands import Command
+from vmtools._commands import make_command
 from vmtools._exceptions import TooManyArgsError
 from vmtools._exceptions import UnrecognisedKeywordError
 from vmtools._exceptions import MissingArgumentError
@@ -15,12 +15,8 @@ class Parser:
         True if more commands are left in the file to be parsed.
     command : str
         The current command being processed.
-    command_type : Command
-        The type of command being processed.
-    arg1 : str
-        The first argument to the current command.
-    arg2 : int
-        The second argument to the current command.
+    parsed_command : Command
+        The command converted to an instance of the Command class.
     line : int
         The current line number of the file being processed.
 
@@ -30,26 +26,12 @@ class Parser:
         Advance to the next command to be parsed. Should only be
     """
 
-    _CMAP = {"add": Command.ARITHMETIC,
-             "sub": Command.ARITHMETIC,
-             "neg": Command.ARITHMETIC,
-             "eq": Command.ARITHMETIC,
-             "gt": Command.ARITHMETIC,
-             "lt": Command.ARITHMETIC,
-             "and": Command.ARITHMETIC,
-             "or": Command.ARITHMETIC,
-             "not": Command.ARITHMETIC,
-             "push": Command.PUSH,
-             "pop": Command.POP}
-
     def __init__(self, file_path):
         self._file_path = file_path
         self._file = None
         self._has_more_commands = False
         self._command = None
-        self._command_type = None
-        self._arg1 = None
-        self._arg2 = None
+        self._parsed_command = None
         self._line = None
 
     def __enter__(self):
@@ -74,7 +56,7 @@ class Parser:
             if line:
                 self._command = strip_line(line)
                 if self._command:
-                    self._parse()
+                    self._parsed_command = make_command(self._command.split())
                     return
             else:
                 self._has_more_commands = False
@@ -89,37 +71,13 @@ class Parser:
         return self._command
 
     @property
-    def command_type(self):
-        return self._command_type
-
-    @property
-    def arg1(self):
-        if self._arg1 is None:
-            raise MissingArgumentError(self)
-        return self._arg1
-
-    @property
-    def arg2(self):
-        if self._arg2 is None:
-            raise MissingArgumentError(self)
-        return self._arg2
+    def parsed_command(self):
+        return self._parsed_command
 
     @property
     def line(self):
         return self._line
 
-    def _parse(self):
-        inputs = self._command.split()
-        if len(inputs) > 3:
-            raise TooManyArgsError(self)
-        self._command_type = Parser._CMAP.get(inputs[0])
-        if self._command_type is Command.ARITHMETIC:
-            self._arg1, self._arg2 = inputs[0], None
-        elif (self._command_type is Command.PUSH
-                or self._command_type is Command.POP):
-            self._arg1, self._arg2 = inputs[1], inputs[2]
-        else:
-            raise UnrecognisedKeywordError(self, inputs[0])
 
 def strip_line(line):
     """Remove any whitespace and comments from a line."""
