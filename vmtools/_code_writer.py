@@ -1,5 +1,3 @@
-from vmtools._commands import Command
-
 class CodeWriter:
     """
     An assembly language code writer.

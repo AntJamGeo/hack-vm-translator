@@ -1,7 +1,4 @@
 from vmtools._commands import make_command
-from vmtools._exceptions import TooManyArgsError
-from vmtools._exceptions import UnrecognisedKeywordError
-from vmtools._exceptions import MissingArgumentError
 
 class Parser:
     """A VM parser.

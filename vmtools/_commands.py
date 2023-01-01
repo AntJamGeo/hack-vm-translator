@@ -1,107 +1,135 @@
-class Command:
-    def __init__(self):
-        self._asm = []
-        self._asm_string = None
+from abc import ABC, abstractmethod
 
-    @property
-    def asm_string(self):
-        if self._asm_string is None:
-            self._asm.append("")
-            self._asm_string = "\n".join(self._asm)
-        return self._asm_string
+class Command(ABC):
+    def __init__(self):
+        self._require_build = True
 
     def write(self, out_file):
-        out_file.write(self.asm_string)
+        out_file.write(self._encode())
 
-class Arithmetic(Command):
+    def _encode(self, require_rebuild=False):
+        if self._require_build:
+            self._asm = []
+            self._build_asm()
+            self._asm.append("")
+            asm_string = "\n".join(self._asm)
+            self._require_build = require_rebuild
+        return asm_string
+
+    def _build_asm_helper(self, comment=None):
+        if comment is not None:
+            self._asm.append(comment)
+
+    @abstractmethod
+    def _build_asm(self):
+        pass
+
+class BinaryOperation(Command):
     _POP_ARGS = ("@SP", "AM=M-1", "D=M", "@R13", "M=D", "@SP", "A=M-1", "D=M")
+    _PUSH_RESULT = ("@SP", "A=M-1", "M=D")
+
+    def _build_asm_helper(self, operation, comment=None):
+        super()._build_asm_helper(comment)
+        self._asm.extend(BinaryOperation._POP_ARGS)
+        self._asm.extend(operation)
+        self._asm.extend(BinaryOperation._PUSH_RESULT)
+
+class UnaryOperation(Command):
     _GO_TO_ARG = ("@SP", "A=M-1")
+    _DO_NEG = "M=-M"
+    _DO_NOT = "M=!M"
+
+    def _build_asm_helper(self, operation, comment=None):
+        super()._build_asm_helper(comment)
+        self._asm.extend(UnaryOperation._GO_TO_ARG)
+        self._asm.append(operation)
+
+class Computation(BinaryOperation):
     _DO_ADD = ("@R13", "D=D+M")
     _DO_SUB = ("@R13", "D=D-M")
-    _DO_NEG = "M=-M"
+    _DO_AND = ("@R13", "D=D&M")
+    _DO_OR = ("@R13", "D=D|M")
+
+class Comparison(BinaryOperation):
     _DO_EQ = "D;JEQ"
     _DO_GT = "D;JGT"
     _DO_LT = "D;JLT"
-    _DO_AND = ("@R13", "D=D&M")
-    _DO_OR = ("@R13", "D=D|M")
-    _DO_NOT = "M=!M"
-    _PUSH_RESULT = ("@SP", "A=M-1", "M=D")
-    _comparison_count = 0
+    _count = 0
 
-    def __init__(self, binary, operation, comment):
-        super().__init__()
-        self._asm.append(comment)
-        if binary:
-            self._asm.extend(Arithmetic._POP_ARGS)
-            self._asm.extend(operation)
-            self._asm.extend(Arithmetic._PUSH_RESULT)
-        else:
-            self._asm.extend(Arithmetic._GO_TO_ARG)
-            self._asm.append(operation)
+    def _build_asm_helper(self, operation, comment=None):
+        super()._build_asm_helper(operation, comment)
 
     @classmethod
-    def _make_comparison(cls, operation):
-        Arithmetic._comparison_count += 1
-        return ("@R13", "D=D-M", f"@TRUE{cls._comparison_count}", operation,
-                "D=0", f"@BOOL{cls._comparison_count}", "0;JMP",
-                f"(TRUE{cls._comparison_count})", "D=-1",
-                f"(BOOL{cls._comparison_count})")
+    def _make_operation(cls, operation):
+        Comparison._count += 1
+        return ("@R13", "D=D-M", f"@COMPARISON_TRUE{Comparison._count}",
+                operation, "D=0", f"@COMPARISON_PUSH{Comparison._count}",
+                "0;JMP", f"(COMPARISON_TRUE{Comparison._count})",
+                "D=-1", f"(COMPARISON_PUSH{Comparison._count})")
 
-class Add(Arithmetic):
-    def __init__(self):
-        super().__init__(True, Arithmetic._DO_ADD, "//add")
+    def _encode(self):
+        return super()._encode(True)
 
-class Subtract(Arithmetic):
-    def __init__(self):
-        super().__init__(True, Arithmetic._DO_SUB, "//subtract")
+class Negate(UnaryOperation):
+    def _build_asm(self):
+        super()._build_asm_helper(UnaryOperation._DO_NEG, "// negate")
 
-class Negate(Arithmetic):
-    def __init__(self):
-        super().__init__(False, Arithmetic._DO_NEG, "//negate")
+class Not(UnaryOperation):
+    def _build_asm(self):
+        super()._build_asm_helper(UnaryOperation._DO_NOT, "// not")
 
-class Equals(Arithmetic):
-    def __init__(self):
-        operation = Arithmetic._make_comparison(Arithmetic._DO_EQ)
-        super().__init__(True, operation, "//equals")
+class Add(Computation):
+    def _build_asm(self):
+        super()._build_asm_helper(Computation._DO_ADD, "// add")
 
-class GreaterThan(Arithmetic):
-    def __init__(self):
-        operation = Arithmetic._make_comparison(Arithmetic._DO_GT)
-        super().__init__(True, operation, "//greater than")
+class Subtract(Computation):
+    def _build_asm(self):
+        super()._build_asm_helper(Computation._DO_SUB, "// subtract")
 
-class LessThan(Arithmetic):
-    def __init__(self):
-        operation = Arithmetic._make_comparison(Arithmetic._DO_LT)
-        super().__init__(True, operation, "//less than")
+class And(Computation):
+    def _build_asm(self):
+        super()._build_asm_helper(Computation._DO_AND, "// and")
 
-class And(Arithmetic):
-    def __init__(self):
-        super().__init__(True, Arithmetic._DO_AND, "//and")
+class Or(Computation):
+    def _build_asm(self):
+        super()._build_asm_helper(Computation._DO_OR, "// or")
 
-class Or(Arithmetic):
-    def __init__(self):
-        super().__init__(True, Arithmetic._DO_OR, "//or")
+class Equals(Comparison):
+    def _build_asm(self):
+        operation = Comparison._make_operation(Comparison._DO_EQ)
+        super()._build_asm_helper(operation, "// equals")
 
-class Not(Arithmetic):
-    def __init__(self):
-        super().__init__(False, Arithmetic._DO_NOT, "//not")
+class GreaterThan(Comparison):
+    def _build_asm(self):
+        operation = Comparison._make_operation(Comparison._DO_GT)
+        super()._build_asm_helper(operation, "// greater than")
+
+class LessThan(Comparison):
+    def _build_asm(self):
+        operation = Comparison._make_operation(Comparison._DO_LT)
+        super()._build_asm_helper(operation, "// less than")
 
 
 class Push(Command):
     def __init__(self, segment, index):
         super().__init__()
 
+    def _build_asm(self):
+        pass
+
 class Pop(Command):
     def __init__(self, segment, index):
         super().__init__()
 
+    def _build_asm(self):
+        pass
 
 def make_command(command, line):
     inputs = command.split()
     if inputs[0] in _AL_OPS:
         if len(inputs) != 1:
             raise Exception()
-        return _AL_OPS[inputs[0]]()
+        return _AL_OPS[inputs[0]]
     elif inputs[0] == "push":
         if len(inputs) != 3:
             raise Exception()
@@ -113,12 +141,12 @@ def make_command(command, line):
     else:
         raise Exception()
 
-_AL_OPS = {"add": Add,
-           "sub": Subtract,
-           "neg": Negate,
-           "eq": Equals,
-           "gt": GreaterThan,
-           "lt": LessThan,
-           "and": And,
-           "or": Or,
-           "not": Not}
+_AL_OPS = {"add": Add(),
+           "sub": Subtract(),
+           "neg": Negate(),
+           "eq": Equals(),
+           "gt": GreaterThan(),
+           "lt": LessThan(),
+           "and": And(),
+           "or": Or(),
+           "not": Not()}
