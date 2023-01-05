@@ -13,9 +13,9 @@ class Command(ABC):
             self._asm = []
             self._build_asm()
             self._asm.append("")
-            asm_string = "\n".join(self._asm)
+            self._asm_string = "\n".join(self._asm)
             self._require_build = require_rebuild
-        return asm_string
+        return self._asm_string
 
     @abstractmethod
     def _build_asm(self, comment=None):
