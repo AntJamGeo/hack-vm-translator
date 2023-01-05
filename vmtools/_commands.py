@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 class Command(ABC):
+    @abstractmethod
     def __init__(self):
         self._require_build = True
 
@@ -16,20 +17,17 @@ class Command(ABC):
             self._require_build = require_rebuild
         return asm_string
 
-    def _build_asm_helper(self, comment=None):
+    @abstractmethod
+    def _build_asm(self, comment=None):
         if comment is not None:
             self._asm.append(comment)
-
-    @abstractmethod
-    def _build_asm(self):
-        pass
 
 class BinaryOperation(Command):
     _POP_ARGS = ("@SP", "AM=M-1", "D=M", "@R13", "M=D", "@SP", "A=M-1", "D=M")
     _PUSH_RESULT = ("@SP", "A=M-1", "M=D")
 
-    def _build_asm_helper(self, operation, comment=None):
-        super()._build_asm_helper(comment)
+    def _build_asm(self, operation, comment=None):
+        super()._build_asm(comment)
         self._asm.extend(BinaryOperation._POP_ARGS)
         self._asm.extend(operation)
         self._asm.extend(BinaryOperation._PUSH_RESULT)
@@ -39,8 +37,8 @@ class UnaryOperation(Command):
     _DO_NEG = "M=-M"
     _DO_NOT = "M=!M"
 
-    def _build_asm_helper(self, operation, comment=None):
-        super()._build_asm_helper(comment)
+    def _build_asm(self, operation, comment=None):
+        super()._build_asm(comment)
         self._asm.extend(UnaryOperation._GO_TO_ARG)
         self._asm.append(operation)
 
@@ -56,8 +54,8 @@ class Comparison(BinaryOperation):
     _DO_LT = "D;JLT"
     _count = 0
 
-    def _build_asm_helper(self, operation, comment=None):
-        super()._build_asm_helper(operation, comment)
+    def _build_asm(self, operation, comment=None):
+        super()._build_asm(operation, comment)
 
     @classmethod
     def _make_operation(cls, operation):
@@ -71,43 +69,70 @@ class Comparison(BinaryOperation):
         return super()._encode(True)
 
 class Negate(UnaryOperation):
+    def __init__(self):
+        super().__init__()
+
     def _build_asm(self):
-        super()._build_asm_helper(UnaryOperation._DO_NEG, "// negate")
+        super()._build_asm(UnaryOperation._DO_NEG, "// negate")
 
 class Not(UnaryOperation):
+    def __init__(self):
+        super().__init__()
+
     def _build_asm(self):
-        super()._build_asm_helper(UnaryOperation._DO_NOT, "// not")
+        super()._build_asm(UnaryOperation._DO_NOT, "// not")
 
 class Add(Computation):
+    def __init__(self):
+        super().__init__()
+
     def _build_asm(self):
-        super()._build_asm_helper(Computation._DO_ADD, "// add")
+        super()._build_asm(Computation._DO_ADD, "// add")
 
 class Subtract(Computation):
+    def __init__(self):
+        super().__init__()
+
     def _build_asm(self):
-        super()._build_asm_helper(Computation._DO_SUB, "// subtract")
+        super()._build_asm(Computation._DO_SUB, "// subtract")
 
 class And(Computation):
+    def __init__(self):
+        super().__init__()
+
     def _build_asm(self):
-        super()._build_asm_helper(Computation._DO_AND, "// and")
+        super()._build_asm(Computation._DO_AND, "// and")
 
 class Or(Computation):
+    def __init__(self):
+        super().__init__()
+
     def _build_asm(self):
-        super()._build_asm_helper(Computation._DO_OR, "// or")
+        super()._build_asm(Computation._DO_OR, "// or")
 
 class Equals(Comparison):
+    def __init__(self):
+        super().__init__()
+
     def _build_asm(self):
         operation = Comparison._make_operation(Comparison._DO_EQ)
-        super()._build_asm_helper(operation, "// equals")
+        super()._build_asm(operation, "// equals")
 
 class GreaterThan(Comparison):
+    def __init__(self):
+        super().__init__()
+
     def _build_asm(self):
         operation = Comparison._make_operation(Comparison._DO_GT)
-        super()._build_asm_helper(operation, "// greater than")
+        super()._build_asm(operation, "// greater than")
 
 class LessThan(Comparison):
+    def __init__(self):
+        super().__init__()
+
     def _build_asm(self):
         operation = Comparison._make_operation(Comparison._DO_LT)
-        super()._build_asm_helper(operation, "// less than")
+        super()._build_asm(operation, "// less than")
 
 
 class Push(Command):
