@@ -4,13 +4,14 @@ class Command(ABC):
     @abstractmethod
     def __init__(self):
         self._require_build = True
+        self._asm = []
+        self._asm_string = ""
 
     def write(self, out_file):
         out_file.write(self._encode())
 
     def _encode(self, require_rebuild=False):
         if self._require_build:
-            self._asm = []
             self._build_asm()
             self._asm.append("")
             self._asm_string = "\n".join(self._asm)
@@ -136,20 +137,59 @@ class LessThan(Comparison):
 
 
 class Push(Command):
-    def __init__(self, segment, index):
+    def __init__(self, segment, index, file_name):
         super().__init__()
+        if segment not in _SEGMENTS:
+            raise Exception()
+        self._segment = segment
+        self._index = index
+        self._file_name = file_name
 
     def _build_asm(self):
-        pass
+        super()._build_asm(f"// push {self._segment} {self._index}")
+        segment = _SEGMENTS[self._segment]
+        if segment == "static":
+            self._asm.extend((f"@{self._file_name}.{self._index}", "D=M"))
+        elif segment == "pointer":
+            pointer = "THAT" if self._index else "THIS"
+            self._asm.extend((f"@{pointer}", "D=M"))
+        elif segment == "constant":
+            self._asm.extend((f"@{self._index}", "D=A"))
+        else:
+            self._asm.extend((f"@{segment}", "D=M", f"@{self._index}",
+                              "A=D+A", "D=M"))
+        self._asm.extend(_PUSH)
 
 class Pop(Command):
-    def __init__(self, segment, index):
+    def __init__(self, segment, index, file_name):
         super().__init__()
+        if segment not in _SEGMENTS or segment == "constant":
+            raise Exception()
+        self._segment = segment
+        self._index = index
+        self._file_name = file_name
 
     def _build_asm(self):
-        pass
+        super()._build_asm(f"// pop {self._segment} {self._index}")
+        segment = _SEGMENTS[self._segment]
+        if segment == "static":
+            self._asm.extend(_POP)
+            self._asm.extend((f"@{self._file_name}.{self._index}", "M=D"))
+        elif segment == "pointer":
+            pointer = "THAT" if self._index else "THIS"
+            self._asm.extend(_POP)
+            self._asm.extend((f"@{pointer}", "M=D"))
+        else:
+            self._asm.extend((f"@{segment}",
+                              "D=M",
+                              f"@{self._index}",
+                              "D=D+A",
+                              "@R13",
+                              "M=D"))
+            self._asm.extend(_POP)
+            self._asm.extend(("@R13", "A=M", "M=D"))
 
-def make_command(command, line):
+def make_command(command, line, file_name):
     inputs = command.split()
     if inputs[0] in _AL_OPS:
         if len(inputs) != 1:
@@ -158,11 +198,11 @@ def make_command(command, line):
     elif inputs[0] == "push":
         if len(inputs) != 3:
             raise Exception()
-        return Push(inputs[1], inputs[2])
+        return Push(inputs[1], inputs[2], file_name)
     elif inputs[0] == "pop":
         if len(inputs) != 3:
             raise Exception()
-        return Pop(inputs[1], inputs[2])
+        return Pop(inputs[1], inputs[2], file_name)
     else:
         raise Exception()
 
@@ -175,3 +215,13 @@ _AL_OPS = {"add": Add(),
            "and": And(),
            "or": Or(),
            "not": Not()}
+_SEGMENTS = {"local": "LCL",
+             "argument": "ARG",
+             "this": "THIS",
+             "that": "THAT",
+             "constant": "constant",
+             "static": "static",
+             "temp": "5",
+             "pointer": "pointer"}
+_PUSH = ("@SP", "M=M+1", "A=M-1", "M=D")
+_POP = ("@SP", "AM=M-1", "D=M")

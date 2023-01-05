@@ -25,6 +25,7 @@ class Parser:
 
     def __init__(self, file_path):
         self._file_path = file_path
+        self._file_name = file_path[:-3]
         self._file = None
         self._has_more_commands = False
         self._command = None
@@ -54,7 +55,8 @@ class Parser:
                 self._command = strip_line(line)
                 if self._command:
                     self._parsed_command = make_command(self._command,
-                                                        self._line)
+                                                        self._line,
+                                                        self._file_name)
                     return
             else:
                 self._has_more_commands = False
