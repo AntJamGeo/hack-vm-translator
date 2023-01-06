@@ -155,8 +155,9 @@ class Push(Command):
         elif segment == "constant":
             self._asm.extend((f"@{self._index}", "D=A"))
         else:
-            self._asm.extend((f"@{segment}", "D=M", f"@{self._index}",
-                              "A=D+A", "D=M"))
+            register = "A" if segment == "5" else "M"
+            self._asm.extend((f"@{segment}", f"D={register}",
+                              f"@{self._index}", "A=D+A", "D=M"))
         self._asm.extend(_PUSH)
 
 class Pop(Command):
@@ -177,8 +178,9 @@ class Pop(Command):
             self._asm.extend(_POP)
             self._asm.extend((f"@{pointer}", "M=D"))
         else:
+            register = "A" if segment == "5" else "M"
             self._asm.extend((f"@{segment}",
-                              "D=M",
+                              f"D={register}",
                               f"@{self._index}",
                               "D=D+A",
                               "@R13",
