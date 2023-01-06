@@ -150,7 +150,7 @@ class Push(Command):
         if segment == "static":
             self._asm.extend((f"@{self._file_name}.{self._index}", "D=M"))
         elif segment == "pointer":
-            pointer = "THAT" if self._index else "THIS"
+            pointer = "THAT" if self._index == "1" else "THIS"
             self._asm.extend((f"@{pointer}", "D=M"))
         elif segment == "constant":
             self._asm.extend((f"@{self._index}", "D=A"))
@@ -174,7 +174,7 @@ class Pop(Command):
             self._asm.extend(_POP)
             self._asm.extend((f"@{self._file_name}.{self._index}", "M=D"))
         elif segment == "pointer":
-            pointer = "THAT" if self._index else "THIS"
+            pointer = "THAT" if self._index == "1" else "THIS"
             self._asm.extend(_POP)
             self._asm.extend((f"@{pointer}", "M=D"))
         else:
