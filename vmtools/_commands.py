@@ -12,6 +12,7 @@ class Command(ABC):
 
     def _encode(self, require_rebuild=False):
         if self._require_build:
+            self._asm = []
             self._build_asm()
             self._asm.append("")
             self._asm_string = "\n".join(self._asm)
@@ -139,8 +140,6 @@ class LessThan(Comparison):
 class Push(Command):
     def __init__(self, segment, index, file_name):
         super().__init__()
-        if segment not in _SEGMENTS:
-            raise Exception()
         self._segment = segment
         self._index = index
         self._file_name = file_name
@@ -163,8 +162,6 @@ class Push(Command):
 class Pop(Command):
     def __init__(self, segment, index, file_name):
         super().__init__()
-        if segment not in _SEGMENTS or segment == "constant":
-            raise Exception()
         self._segment = segment
         self._index = index
         self._file_name = file_name
@@ -189,20 +186,23 @@ class Pop(Command):
             self._asm.extend(_POP)
             self._asm.extend(("@R13", "A=M", "M=D"))
 
-def make_command(command, line, file_name):
-    inputs = command.split()
-    if inputs[0] in _AL_OPS:
-        if len(inputs) != 1:
+def make_command(arguments, line, file_name):
+    if arguments[0] in _AL_OPS:
+        if len(arguments) != 1:
             raise Exception()
-        return _AL_OPS[inputs[0]]
-    elif inputs[0] == "push":
-        if len(inputs) != 3:
+        return _AL_OPS[arguments[0]]
+    elif arguments[0] == "push":
+        if len(arguments) != 3:
             raise Exception()
-        return Push(inputs[1], inputs[2], file_name)
-    elif inputs[0] == "pop":
-        if len(inputs) != 3:
+        if arguments[1] not in _SEGMENTS:
             raise Exception()
-        return Pop(inputs[1], inputs[2], file_name)
+        return Push(arguments[1], arguments[2], file_name)
+    elif arguments[0] == "pop":
+        if len(arguments) != 3:
+            raise Exception()
+        if arguments[1] not in _SEGMENTS or arguments[1] == "constant":
+            raise Exception()
+        return Pop(arguments[1], arguments[2], file_name)
     else:
         raise Exception()
 

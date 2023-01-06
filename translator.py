@@ -14,7 +14,7 @@ if __name__ == "__main__":
         with vmtools.Parser(in_file_path) as parser, \
              vmtools.CodeWriter(out_file_path) as code_writer:
             while parser.has_more_commands:
-                code_writer.write(parser.parsed_command)
+                code_writer.write(parser.command, parser.line)
                 parser.advance()
     else:
         raise InvalidFileTypeError("Argument should be a .vm file.")
