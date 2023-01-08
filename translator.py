@@ -1,7 +1,6 @@
 import sys
 
 import vmtools
-from vmtools import Command
 
 class InvalidFileTypeError(Exception):
     pass
