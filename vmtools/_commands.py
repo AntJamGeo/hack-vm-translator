@@ -1,6 +1,26 @@
 from abc import ABC, abstractmethod
 
 class Command(ABC):
+    """An abstract base class for commands.
+
+    All commands are initialised with an empty list that will contain
+    the assembly commands needed to execute the command, an empty
+    assembly code string, and a requirement to be built, which means
+    the assembly code in the list will need to be joined together to
+    produce a string of commands that can be written into the output
+    file. Depending on the type of command, it may need rebuilding
+    again, in which case _require_build will remain True, otherwise
+    the first time _asm_string is built, that is how it will remain
+    for the lifetime of the Command object. The process of building
+    the string is done by the _encode function, which gets called
+    when the write function is called so that the correct string of
+    assembly commands is written to the output file.
+
+    Methods
+    -------
+    write(out_file)
+        Write the command in assembly code into the output file.
+    """
     @abstractmethod
     def __init__(self):
         self._require_build = True
@@ -189,6 +209,24 @@ class Pop(Command):
             self._asm.extend(("@R13", "A=M", "M=D"))
 
 def make_command(arguments, line, file_name):
+    """Make a command.
+
+    Parameters
+    ----------
+    arguments : list
+        A list of keywords found on a line by the Parser.
+    line : int
+        The current line number in the input file (for locating
+        errors in a .vm file).
+    file_name : string
+        The name of the file (for static commands).
+
+    Returns
+    -------
+    Command
+        A command object for writing assembly code into a .asm
+        file.
+    """
     if arguments[0] in _AL_OPS:
         if len(arguments) != 1:
             raise Exception()

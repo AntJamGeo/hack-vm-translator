@@ -10,8 +10,6 @@ class Parser:
         True if more commands are left in the file to be parsed.
     command : str
         The current command being processed.
-    parsed_command : (string, int)
-        The command converted to an instance of the Command class.
     line : int
         The current line number of the file being processed.
 
@@ -19,6 +17,7 @@ class Parser:
     -------
     advance()
         Advance to the next command to be parsed. Should only be
+        called if has_more_commands is True.
     """
 
     def __init__(self, file_path):
