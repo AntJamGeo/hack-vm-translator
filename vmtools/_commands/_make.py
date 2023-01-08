@@ -9,6 +9,9 @@ from vmtools._commands._arithmetic import Or
 from vmtools._commands._arithmetic import Not
 from vmtools._commands._pushpop import Push
 from vmtools._commands._pushpop import Pop
+from vmtools._commands._branching import Label
+from vmtools._commands._branching import GoTo
+from vmtools._commands._branching import IfGoTo
 
 
 def make_command(arguments, line, file_name):
@@ -46,6 +49,18 @@ def make_command(arguments, line, file_name):
         if arguments[1] not in _SEGMENTS or arguments[1] == "constant":
             raise Exception()
         return Pop(arguments[1], arguments[2], file_name)
+    elif arguments[0] == "label":
+        if len(arguments) != 2:
+            raise Exception()
+        return Label(arguments[1])
+    elif arguments[0] == "goto":
+        if len(arguments) != 2:
+            raise Exception()
+        return GoTo(arguments[1])
+    elif arguments[0] == "if-goto":
+        if len(arguments) != 2:
+            raise Exception()
+        return IfGoTo(arguments[1])
     else:
         raise Exception()
 
