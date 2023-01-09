@@ -1,1 +1,1 @@
-from vmtools._commands._make import make_command
+from vmtools._commands.make import make_command
