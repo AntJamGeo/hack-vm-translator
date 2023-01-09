@@ -12,6 +12,9 @@ from vmtools._commands._pushpop import Pop
 from vmtools._commands._branching import Label
 from vmtools._commands._branching import GoTo
 from vmtools._commands._branching import IfGoTo
+from vmtools._commands._function import Call
+from vmtools._commands._function import Function
+from vmtools._commands._function import Return
 
 
 def make_command(arguments, line, file_name):
@@ -61,6 +64,18 @@ def make_command(arguments, line, file_name):
         if len(arguments) != 2:
             raise Exception()
         return IfGoTo(arguments[1])
+    elif arguments[0] == "call":
+        if len(arguments) != 3:
+            raise Exception()
+        return Call(arguments[1], arguments[2])
+    elif arguments[0] == "function":
+        if len(arguments) != 3:
+            raise Exception()
+        return Function(arguments[1], arguments[2])
+    elif arguments[0] == "return":
+        if len(arguments) != 1:
+            raise Exception()
+        return Return()
     else:
         raise Exception()
 

@@ -43,3 +43,6 @@ class Command(ABC):
     def _build_asm(self, comment=None):
         if comment is not None:
             self._asm.append(comment)
+
+PUSH = ("@SP", "M=M+1", "A=M-1", "M=D")
+POP = ("@SP", "AM=M-1", "D=M")

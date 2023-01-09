@@ -1,4 +1,4 @@
-from vmtools._commands._base import Command
+from vmtools._commands._base import Command, PUSH, POP
 
 class Push(Command):
     def __init__(self, segment, index, file_name):
@@ -20,7 +20,7 @@ class Push(Command):
             segment, register = _SEGMENT_MAP[self._segment]
             self._asm.extend((f"@{segment}", f"D={register}",
                               f"@{self._index}", "A=D+A", "D=M"))
-        self._asm.extend(_PUSH)
+        self._asm.extend(PUSH)
 
 class Pop(Command):
     def __init__(self, segment, index, file_name):
@@ -32,11 +32,11 @@ class Pop(Command):
     def _build_asm(self):
         super()._build_asm(f"// pop {self._segment} {self._index}")
         if self._segment == "static":
-            self._asm.extend(_POP)
+            self._asm.extend(POP)
             self._asm.extend((f"@{self._file_name}.{self._index}", "M=D"))
         elif self._segment == "pointer":
             pointer = "THAT" if self._index == "1" else "THIS"
-            self._asm.extend(_POP)
+            self._asm.extend(POP)
             self._asm.extend((f"@{pointer}", "M=D"))
         else:
             segment, register = _SEGMENT_MAP[self._segment]
@@ -46,11 +46,9 @@ class Pop(Command):
                               "D=D+A",
                               "@R13",
                               "M=D"))
-            self._asm.extend(_POP)
+            self._asm.extend(POP)
             self._asm.extend(("@R13", "A=M", "M=D"))
 
-_PUSH = ("@SP", "M=M+1", "A=M-1", "M=D")
-_POP = ("@SP", "AM=M-1", "D=M")
 _SEGMENT_MAP = {"local": ("LCL", "M"),
                 "argument": ("ARG", "M"),
                 "this": ("THIS", "M"),
