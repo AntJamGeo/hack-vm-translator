@@ -13,9 +13,8 @@ class CodeWriter:
         Write a command into the output file.
     """
 
-    def __init__(self, file_path):
-        self._file_path = file_path
-        self._file_name = '.'.join(file_path[:-4].split('/'))
+    def __init__(self, basename):
+        self._file_path = basename + ".asm"
         self._file = None
 
     def __enter__(self):
@@ -25,6 +24,6 @@ class CodeWriter:
     def __exit__(self, *args):
         self._file.close()
 
-    def write(self, args, line):
-        make_command(args, line, self._file_name).write(self._file)
+    def write(self, words, line, module):
+        make_command(words, line, module).write(self._file)
 

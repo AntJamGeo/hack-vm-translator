@@ -17,18 +17,18 @@ from vmtools._commands._function import Function
 from vmtools._commands._function import Return
 
 
-def make_command(arguments, line, file_name):
+def make_command(words, line, module_name):
     """Make a command.
 
     Parameters
     ----------
-    arguments : list
+    words : list
         A list of keywords found on a line by the Parser.
     line : int
         The current line number in the input file (for locating
         errors in a .vm file).
-    file_name : string
-        The name of the file (for static commands).
+    module_name : str
+        The name of the module.
 
     Returns
     -------
@@ -36,44 +36,44 @@ def make_command(arguments, line, file_name):
         A command object for writing assembly code into a .asm
         file.
     """
-    if arguments[0] in _AL_OPS:
-        if len(arguments) != 1:
+    if words[0] in _AL_OPS:
+        if len(words) != 1:
             raise Exception()
-        return _AL_OPS[arguments[0]]
-    elif arguments[0] == "push":
-        if len(arguments) != 3:
+        return _AL_OPS[words[0]]
+    elif words[0] == "push":
+        if len(words) != 3:
             raise Exception()
-        if arguments[1] not in _SEGMENTS:
+        if words[1] not in _SEGMENTS:
             raise Exception()
-        return Push(arguments[1], arguments[2], file_name)
-    elif arguments[0] == "pop":
-        if len(arguments) != 3:
+        return Push(words[1], words[2], module_name)
+    elif words[0] == "pop":
+        if len(words) != 3:
             raise Exception()
-        if arguments[1] not in _SEGMENTS or arguments[1] == "constant":
+        if words[1] not in _SEGMENTS or words[1] == "constant":
             raise Exception()
-        return Pop(arguments[1], arguments[2], file_name)
-    elif arguments[0] == "label":
-        if len(arguments) != 2:
+        return Pop(words[1], words[2], module_name)
+    elif words[0] == "label":
+        if len(words) != 2:
             raise Exception()
-        return Label(arguments[1])
-    elif arguments[0] == "goto":
-        if len(arguments) != 2:
+        return Label(words[1])
+    elif words[0] == "goto":
+        if len(words) != 2:
             raise Exception()
-        return GoTo(arguments[1])
-    elif arguments[0] == "if-goto":
-        if len(arguments) != 2:
+        return GoTo(words[1])
+    elif words[0] == "if-goto":
+        if len(words) != 2:
             raise Exception()
-        return IfGoTo(arguments[1])
-    elif arguments[0] == "call":
-        if len(arguments) != 3:
+        return IfGoTo(words[1])
+    elif words[0] == "call":
+        if len(words) != 3:
             raise Exception()
-        return Call(arguments[1], arguments[2])
-    elif arguments[0] == "function":
-        if len(arguments) != 3:
+        return Call(words[1], words[2])
+    elif words[0] == "function":
+        if len(words) != 3:
             raise Exception()
-        return Function(arguments[1], arguments[2])
-    elif arguments[0] == "return":
-        if len(arguments) != 1:
+        return Function(words[1], words[2])
+    elif words[0] == "return":
+        if len(words) != 1:
             raise Exception()
         return Return()
     else:

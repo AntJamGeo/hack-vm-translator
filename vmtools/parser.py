@@ -1,17 +1,22 @@
-class Parser:
-    """A VM parser.
+import os
 
-    Loads a file and extracts the commands and arguments from each
-    line in the file.
+class Parser:
+    """
+    A VM parser.
+
+    Loads a module and extracts the commands and arguments from each
+    line in the module.
 
     Attributes
     ----------
     has_more_commands : bool
-        True if more commands are left in the file to be parsed.
-    command : str
-        The current command being processed.
+        True if more commands are left in the module to be parsed.
+    words : str
+        The words found in the current command.
     line : int
-        The current line number of the file being processed.
+        The current line number of the module being processed.
+    module_name : str
+        The name of the module being processed.
 
     Methods
     -------
@@ -24,8 +29,10 @@ class Parser:
         self._file_path = file_path
         self._file = None
         self._has_more_commands = False
-        self._command = None
+        self._words = None
         self._line = None
+        module_name = os.path.splitext(file_path)[0]
+        self._module_name = ".".join(module_name.split(os.sep))
 
     def __enter__(self):
         self._file = open(self._file_path, "r")
@@ -47,8 +54,8 @@ class Parser:
             self._line += 1
             line = self._file.readline()
             if line:
-                self._command = extract_words(line)
-                if self._command:
+                self._words = extract_words(line)
+                if self._words:
                     return
             else:
                 self._has_more_commands = False
@@ -59,12 +66,16 @@ class Parser:
         return self._has_more_commands
 
     @property
-    def command(self):
-        return self._command
+    def words(self):
+        return self._words
 
     @property
     def line(self):
         return self._line
+
+    @property
+    def module_name(self):
+        return self._module_name
 
 
 def extract_words(line):
