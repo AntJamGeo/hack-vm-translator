@@ -3,33 +3,37 @@ import os
 
 import vmtools
 
-def write(input_file, code_writer):
+def write(input_file, module, code_writer):
+    code_writer.module = module
     with vmtools.Parser(input_file) as parser:
         while parser.has_more_commands:
-            code_writer.write(parser.words, parser.line, parser.module_name)
+            code_writer.write(parser.words, parser.line)
             parser.advance()
 
 def main():
-    dirname, basename = os.path.split(sys.argv[1])
+    path = sys.argv[1]
+    dirname, basename = os.path.split(path)
     base_no_ext, ext = os.path.splitext(basename)
-    if dirname:
-        os.chdir(dirname)
 
-    if os.path.isdir(basename):
+    if os.path.isdir(path):
+        os.chdir(path)
         with vmtools.CodeWriter(basename) as code_writer:
-            stack = [basename]
+            stack = ["."]
             while stack:
                 path = stack.pop()
                 for entry in os.scandir(path):
                     if entry.is_dir():
-                        stack.append(entry)
+                        stack.append(entry.path)
                     else:
-                        ext = os.path.splitext(entry.path)[1]
+                        base_no_ext, ext = os.path.splitext(entry.path)
                         if ext == ".vm":
-                            write(entry.path, code_writer)
-    elif os.path.isfile(basename) and ext == ".vm":
+                            module = ".".join(base_no_ext.split(os.sep)[1:])
+                            write(entry.path, module, code_writer)
+    elif os.path.isfile(path) and ext == ".vm":
+        if dirname:
+            os.chdir(dirname)
         with vmtools.CodeWriter(base_no_ext) as code_writer:
-            write(basename, code_writer)
+            write(basename, base_no_ext, code_writer)
     else:
         raise TypeError("Argument must be directory or .vm file.")
 

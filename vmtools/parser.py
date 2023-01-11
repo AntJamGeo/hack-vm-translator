@@ -15,8 +15,6 @@ class Parser:
         The words found in the current command.
     line : int
         The current line number of the module being processed.
-    module_name : str
-        The name of the module being processed.
 
     Methods
     -------
@@ -31,8 +29,6 @@ class Parser:
         self._has_more_commands = False
         self._words = None
         self._line = None
-        module_name = os.path.splitext(file_path)[0]
-        self._module_name = ".".join(module_name.split(os.sep))
 
     def __enter__(self):
         self._file = open(self._file_path, "r")
@@ -72,10 +68,6 @@ class Parser:
     @property
     def line(self):
         return self._line
-
-    @property
-    def module_name(self):
-        return self._module_name
 
 
 def extract_words(line):
