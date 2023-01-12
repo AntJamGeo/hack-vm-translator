@@ -1,53 +1,94 @@
-from vmtools._commands._base import Command, PUSH
+from vmtools._commands._base import Command
 
 class Call(Command):
+    _instructions = [
+            # We store SP-num_args in R13. This will be useful later
+            # when we want to reposition ARG.
+            "@SP\nD=M\n",
+            None, # @num_args
+            "D=D-A\n@R13\nM=D\n",
+            # We then generate a return address label.
+            None, # @label
+            (
+                # We push this label to the stack.
+                "D=A\n@SP\nM=M+1\nA=M-1\nM=D\n"
+                # We also need to push LCL, ARG, THIS and THAT to the
+                # stack to save the current state.
+                "@LCL\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n"
+                "@ARG\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n"
+                "@THIS\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n"
+                "@THAT\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n"
+                # We go back to R13 where we stored SP-num_args (now
+                # equal to SP-5-num_args as we incremented the stack
+                # pointer 5 times in the previous instructions). This
+                # value is put into the ARG address as this is where
+                # our arguments begin.
+                "@R13\nD=M\n@ARG\nM=D\n",
+                # We reposition LCL to SP.
+                "@SP\nD=M\n@LCL\nM=D\n",
+                ),
+            # Now that the state has been saved, we can jump to the
+            # function to execute its code.
+            None, # @func_name
+            "0;JMP\n",
+            # Once the function has finished executing, it should
+            # jump back here using the return address stored on the
+            # stack. This is done by placing the return address label
+            # here.
+            None # (label)
+            ]
     _count = 0
 
     def __init__(self, func_name, num_args):
-        super().__init__()
-        self._func_name = func_name
-        self._num_args = num_args
-
-    def _build_asm(self):
-        super()._build_asm(f"// call {self._func_name} {self._num_args}")
         Call._count += 1
-        label = f"@{self._func_name}$ret.{Call._count}"
-        self._asm.extend(("@SP", "D=M", f"@{self._num_args}", "D=D-A",
-            "@R13", "M=D"))
-        self._asm.extend((f"{label}", "D=A"))
-        self._asm.extend(PUSH)
-        for segment in ("LCL", "ARG", "THIS", "THAT"):
-            self._asm.extend((f"@{segment}", "D=M"))
-            self._asm.extend(PUSH)
-        self._asm.extend(("@R13", "D=M", "@ARG", "M=D"))
-        self._asm.extend(("@SP", "D=M", "@LCL", "M=D"))
-        self._asm.extend((f"@{self._func_name}", "0;JMP"))
-        self._asm.append(f"({label})")
+        label = f"@{func_name}$ret.{Call._count}"
+        Call._instructions[1] = f"@{num_args}\n"
+        Call._instructions[3] = f"@{label}\n"
+        Call._instructions[5] = f"@{func_name}\n"
+        Call._instructions[7] = f"({label})\n"
+        super().__init__()
+
 
 class Function(Command):
-    def __init__(self, func_name, num_vars):
-        super().__init__()
-        self._func_name = func_name
-        self._num_vars = num_vars
+    _instructions = [
+            # Start with the function name label.
+            None, # (func_name)
+            # Then go to the stack and push num_vars local variables.
+            "@SP\nA=M\n",
+            None, # M=0\nAD=A+1\n repeated num_vars times
+            # Update the value of the stack pointer.
+            "@SP\nM=D\n"
+            ]
 
-    def _build_asm(self):
-        super()._build_asm(f"// function {self._func_name} {self._num_vars}")
-        self._asm.append(f"({self._func_name})")
-        self._asm.extend(("@SP", "A=M"))
-        for _ in range(int(self._num_vars)):
-            self._asm.extend(("M=0", "AD=A+1"))
-        self._asm.extend(("@SP", "M=D"))
+    def __init__(self, func_name, num_vars):
+        Function._instructions[0] = f"({func_name})\n"
+        Function._instructions[2] = (
+                "".join(["M=0\nAD=A+1\n" for _ in range(int(num_vars))]))
+        super().__init__()
+
 
 class Return(Command):
+    _instructions = [
+            (
+                # Store the address at the frame's end in R13
+                "@LCL\nD=M\n@R13\nM=D\n"
+                # Store the return address in R14
+                "@5\nA=D-A\nD=M\n@R14\nM=D\n"
+                # Store the return value where argument 0 was (which will now
+                # be top of the stack)
+                "@SP\nA=M-1\nD=M\n@ARG\nA=M\nM=D\n"
+                # Update stack pointer to just after the return value
+                "D=A+1\n@SP\nM=D\n"
+                # Restore local, argument, this and that
+                "@R13\nAM=M-1\nD=M\n@THAT\nM=D\n"
+                "@R13\nAM=M-1\nD=M\n@THIS\nM=D\n"
+                "@R13\nAM=M-1\nD=M\n@ARG\nM=D\n"
+                "@R13\nAM=M-1\nD=M\n@LCL\nM=D\n"
+                # Jump to the return address
+                "@R14\nA=M\n0;JMP\n"
+                )
+            ]
+
     def __init__(self):
         super().__init__()
 
-    def _build_asm(self):
-        super()._build_asm("// return")
-        self._asm.extend(("@LCL", "D=M", "@R13", "M=D"))
-        self._asm.extend(("@5", "A=D-A", "D=M", "@R14", "M=D"))
-        self._asm.extend(("@SP", "A=M-1", "D=M", "@ARG", "A=M", "M=D"))
-        self._asm.extend(("D=A+1", "@SP", "M=D"))
-        for segment in ("THAT", "THIS", "ARG", "LCL"):
-            self._asm.extend(("@R13", "AM=M-1", "D=M", f"@{segment}", "M=D"))
-        self._asm.extend(("@R14", "A=M", "0;JMP"))

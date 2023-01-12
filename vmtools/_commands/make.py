@@ -1,12 +1,12 @@
-from vmtools._commands._arithmetic import Add
-from vmtools._commands._arithmetic import Subtract
-from vmtools._commands._arithmetic import Negate
-from vmtools._commands._arithmetic import Equals
-from vmtools._commands._arithmetic import GreaterThan
-from vmtools._commands._arithmetic import LessThan
-from vmtools._commands._arithmetic import And
-from vmtools._commands._arithmetic import Or
-from vmtools._commands._arithmetic import Not
+from vmtools._commands._binary_operations import Add
+from vmtools._commands._binary_operations import Subtract
+from vmtools._commands._binary_operations import Equals
+from vmtools._commands._binary_operations import GreaterThan
+from vmtools._commands._binary_operations import LessThan
+from vmtools._commands._binary_operations import And
+from vmtools._commands._binary_operations import Or
+from vmtools._commands._unary_operations import Negate
+from vmtools._commands._unary_operations import Not
 from vmtools._commands._pushpop import Push
 from vmtools._commands._pushpop import Pop
 from vmtools._commands._branching import Label
@@ -36,10 +36,14 @@ def make_command(words, line, module_name):
         A command object for writing assembly code into a .asm
         file.
     """
-    if words[0] in _AL_OPS:
+    if words[0] in _COMPARISONS:
         if len(words) != 1:
             raise Exception()
-        return _AL_OPS[words[0]]
+        return _COMPARISONS[words[0]]()
+    elif words[0] in _OTHER_AL_OPS:
+        if len(words) != 1:
+            raise Exception()
+        return _OTHER_AL_OPS[words[0]]
     elif words[0] == "push":
         if len(words) != 3:
             raise Exception()
@@ -79,20 +83,26 @@ def make_command(words, line, module_name):
     else:
         raise Exception()
 
-_AL_OPS = {"add": Add(),
-           "sub": Subtract(),
-           "neg": Negate(),
-           "eq": Equals(),
-           "gt": GreaterThan(),
-           "lt": LessThan(),
-           "and": And(),
-           "or": Or(),
-           "not": Not()}
-_SEGMENTS = {"local",
-             "argument",
-             "this",
-             "that",
-             "constant",
-             "static",
-             "temp",
-             "pointer"}
+_COMPARISONS = {
+        "eq": Equals,
+        "gt": GreaterThan,
+        "lt": LessThan
+        }
+_OTHER_AL_OPS = {
+        "add": Add(),
+        "sub": Subtract(),
+        "neg": Negate(),
+        "and": And(),
+        "or": Or(),
+        "not": Not()
+        }
+_SEGMENTS = {
+        "local",
+        "argument",
+        "this",
+        "that",
+        "constant",
+        "static",
+        "temp",
+        "pointer"
+        }

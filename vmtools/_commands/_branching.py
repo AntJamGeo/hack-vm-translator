@@ -1,34 +1,28 @@
-from abc import abstractmethod
-
 from vmtools._commands._base import Command
 
-class Branching(Command):
-    @abstractmethod
+class Label(Command):
     def __init__(self, label):
+        self._instructions = [f"({label})\n"]
         super().__init__()
-        self._label = label
 
-class Label(Branching):
+class GoTo(Command):
+    _instructions = [
+            None,
+            "0;JMP\n"
+            ]
+
     def __init__(self, label):
-        super().__init__(label)
+        GoTo._instructions[0] = f"@{label}\n"
+        super().__init__()
 
-    def _build_asm(self):
-        self._asm.append(f"({self._label})")
+class IfGoTo(Command):
+    _instructions = [
+            "@SP\nAM=M-1\nD=M\n",
+            None,
+            "D;JNE\n"
+            ]
 
-class GoTo(Branching):
     def __init__(self, label):
-        super().__init__(label)
+        IfGoTo._instructions[1] = f"@{label}\n"
+        super().__init__()
 
-    def _build_asm(self):
-        self._asm.extend((f"@{self._label}", "0;JMP"))
-
-class IfGoTo(Branching):
-    def __init__(self, label):
-        super().__init__(label)
-
-    def _build_asm(self):
-        self._asm.extend(("@SP",
-                          "AM=M-1",
-                          "D=M",
-                          f"@{self._label}",
-                          "D;JNE"))
