@@ -18,17 +18,10 @@ def main():
     if os.path.isdir(path):
         os.chdir(path)
         with vmtools.CodeWriter(basename, True) as code_writer:
-            stack = ["."]
-            while stack:
-                path = stack.pop()
-                for entry in os.scandir(path):
-                    if entry.is_dir():
-                        stack.append(entry.path)
-                    else:
-                        base_no_ext, ext = os.path.splitext(entry.path)
-                        if ext == ".vm":
-                            module = ".".join(base_no_ext.split(os.sep)[1:])
-                            write(entry.path, module, code_writer)
+            for entry in os.scandir():
+                base_no_ext, ext = os.path.splitext(entry.name)
+                if ext == ".vm":
+                    write(entry.path, base_no_ext, code_writer)
     elif os.path.isfile(path) and ext == ".vm":
         if dirname:
             os.chdir(dirname)
