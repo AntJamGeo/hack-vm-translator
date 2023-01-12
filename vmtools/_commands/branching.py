@@ -1,8 +1,8 @@
 from vmtools._commands._base import Command
 
 class Label(Command):
-    def __init__(self, label):
-        self._instructions = [f"({label})\n"]
+    def __init__(self, label, function):
+        self._instructions = [f"({function}${label})\n"]
         super().__init__()
 
 class GoTo(Command):
@@ -11,8 +11,8 @@ class GoTo(Command):
             "0;JMP\n"
             ]
 
-    def __init__(self, label):
-        GoTo._instructions[0] = f"@{label}\n"
+    def __init__(self, label, function):
+        GoTo._instructions[0] = f"@{function}${label}\n"
         super().__init__()
 
 class IfGoTo(Command):
@@ -22,7 +22,7 @@ class IfGoTo(Command):
             "D;JNE\n"
             ]
 
-    def __init__(self, label):
-        IfGoTo._instructions[1] = f"@{label}\n"
+    def __init__(self, label, function):
+        IfGoTo._instructions[1] = f"@{function}${label}\n"
         super().__init__()
 

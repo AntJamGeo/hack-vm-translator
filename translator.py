@@ -4,7 +4,7 @@ import os
 import vmtools
 
 def write(input_file, module, code_writer):
-    code_writer.module = module
+    code_writer.set_module(module)
     with vmtools.Parser(input_file) as parser:
         while parser.has_more_commands:
             code_writer.write(parser.words, parser.line)

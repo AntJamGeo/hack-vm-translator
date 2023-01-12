@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from vmtools._commands._binary_operations._base import BinaryOperation
+from vmtools._commands.binary_operations._base import BinaryOperation
 
 class Computation(BinaryOperation):
     @abstractmethod
