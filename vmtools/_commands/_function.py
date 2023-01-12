@@ -2,30 +2,28 @@ from vmtools._commands._base import Command
 
 class Call(Command):
     _instructions = [
-            # We store SP-num_args in R13. This will be useful later
-            # when we want to reposition ARG.
-            "@SP\nD=M\n",
-            None, # @num_args
-            "D=D-A\n@R13\nM=D\n",
-            # We then generate a return address label.
+            # Generate a return address label.
             None, # @label
             (
-                # We push this label to the stack.
+                # Push this label to the stack.
                 "D=A\n@SP\nM=M+1\nA=M-1\nM=D\n"
-                # We also need to push LCL, ARG, THIS and THAT to the
-                # stack to save the current state.
+                # Push LCL, ARG, THIS and THAT to the stack to save
+                # the current state.
                 "@LCL\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n"
                 "@ARG\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n"
                 "@THIS\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n"
                 "@THAT\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n"
-                # We go back to R13 where we stored SP-num_args (now
-                # equal to SP-5-num_args as we incremented the stack
-                # pointer 5 times in the previous instructions). This
-                # value is put into the ARG address as this is where
-                # our arguments begin.
-                "@R13\nD=M\n@ARG\nM=D\n",
-                # We reposition LCL to SP.
-                "@SP\nD=M\n@LCL\nM=D\n",
+                # Save SP-5-num_args to ARG as this is the location
+                # of the first argument. Start by finding SP-5.
+                "@SP\nD=M\n@5\nD=D-A\n"
+                ),
+            # Then get the number of arguments.
+            None, # @num_args
+            (
+                # Subtract this from the D-register and save to ARG.
+                "D=D-A\n@ARG\nM=D\n"
+                # Reposition LCL to SP.
+                "@SP\nD=M\n@LCL\nM=D\n"
                 ),
             # Now that the state has been saved, we can jump to the
             # function to execute its code.
@@ -35,7 +33,7 @@ class Call(Command):
             # jump back here using the return address stored on the
             # stack. This is done by placing the return address label
             # here.
-            None # (label)
+            None  # (label)
             ]
     _count = 0
 
