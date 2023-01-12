@@ -39,7 +39,7 @@ class Call(Command):
 
     def __init__(self, func_name, num_args):
         Call._count += 1
-        label = f"@{func_name}$ret.{Call._count}"
+        label = f"{func_name}$ret.{Call._count}"
         Call._instructions[0] = f"@{label}\n"
         Call._instructions[2] = f"@{num_args}\n"
         Call._instructions[4] = f"@{func_name}\n"
