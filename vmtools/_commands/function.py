@@ -59,10 +59,14 @@ class Function(Command):
             ]
 
     def __init__(self, func_name, num_vars):
-        Function._instructions[0] = f"({func_name})\n"
-        Function._instructions[2] = (
-                "".join(["M=0\nAD=A+1\n" for _ in range(int(num_vars))]))
-        super().__init__()
+        n = int(num_vars)
+        if n:
+            Function._instructions[0] = f"({func_name})\n"
+            Function._instructions[2] = (
+                    "".join(["M=0\nAD=A+1\n" for _ in range(n)]))
+            super().__init__()
+        else:
+            self._asm = f"({func_name})\n"
 
 
 class Return(Command):

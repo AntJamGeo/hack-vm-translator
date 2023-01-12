@@ -4,7 +4,7 @@ import os
 import vmtools
 
 def write(input_file, module, code_writer):
-    code_writer.set_module(module)
+    code_writer.module = module
     with vmtools.Parser(input_file) as parser:
         while parser.has_more_commands:
             code_writer.write(parser.words, parser.line)
@@ -17,7 +17,7 @@ def main():
 
     if os.path.isdir(path):
         os.chdir(path)
-        with vmtools.CodeWriter(basename) as code_writer:
+        with vmtools.CodeWriter(basename, True) as code_writer:
             stack = ["."]
             while stack:
                 path = stack.pop()
@@ -32,7 +32,7 @@ def main():
     elif os.path.isfile(path) and ext == ".vm":
         if dirname:
             os.chdir(dirname)
-        with vmtools.CodeWriter(base_no_ext) as code_writer:
+        with vmtools.CodeWriter(base_no_ext, False) as code_writer:
             write(basename, base_no_ext, code_writer)
     else:
         raise TypeError("Argument must be directory or .vm file.")
