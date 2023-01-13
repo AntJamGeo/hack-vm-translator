@@ -2,18 +2,15 @@ from vmtools._commands._base import Command
 
 class Label(Command):
     def __init__(self, label, function):
-        self._instructions = [f"({function}${label})\n"]
-        super().__init__()
+        # A simple enough command to not require joining a list of
+        # strings together
+        self._asm = f"({function}${label})\n"
 
 class GoTo(Command):
-    _instructions = [
-            None,
-            "0;JMP\n"
-            ]
-
     def __init__(self, label, function):
-        GoTo._instructions[0] = f"@{function}${label}\n"
-        super().__init__()
+        # A simple enough command to not require joining a list of
+        # strings together
+        self._asm = f"@{function}${label}\n0;JMP\n"
 
 class IfGoTo(Command):
     _instructions = [

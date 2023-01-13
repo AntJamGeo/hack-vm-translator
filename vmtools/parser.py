@@ -1,5 +1,3 @@
-import os
-
 class Parser:
     """
     A VM parser.
