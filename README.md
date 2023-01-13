@@ -10,7 +10,7 @@ The translator requires a .vm file or a directory containing .vm files to be pro
 
 To use, clone this repository and run `python3 <path to translator.py> <path to target .vm file or directory>`. For example, if the current working directory is the hack-vm-translator directory and we add
 * `example.vm` to the directory, running `python3 translator.py example.vm` will produce `example.asm` in the hack-vm-translator directory;
-* a directory called `example` to the directory, running `python3 translator.py example` will also produce `example.asm` in the hack-vm-translator directory.
+* a directory called `example` to the directory, running `python3 translator.py example` will produce `example.asm` in the `example` directory.
 
 ## References
 * nand2tetris Website: https://www.nand2tetris.org/
