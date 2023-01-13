@@ -3,18 +3,14 @@ from abc import abstractmethod
 from vmtools._commands._base import Command
 
 class UnaryOperation(Command):
-    _instructions = [
-            # We simply go to the top of the stack and perform the
-            # unary operation on it.
-            "@SP\nA=M-1\n",
-            None,
-            ]
-
     @abstractmethod
     def __init__(self):
-        UnaryOperation._instructions[1] = self._OP_STR
-        super().__init__()
-        
+        self._asm = (
+                # We simply go to the top of the stack and perform
+                # the unary operation on it.
+                "@SP\nA=M-1\n"
+                f"{self._OP_STR}"
+                )
 
 class Negate(UnaryOperation):
     _OP_STR = "M=-M\n"

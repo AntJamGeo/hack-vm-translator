@@ -1,14 +1,13 @@
 from abc import ABC, abstractmethod
 
 class Command(ABC):
-    """An abstract base class for commands.
+    """
+    An abstract base class for commands.
 
-    All non-abstract subclasses should have a private instructions
-    variable, which is a list of strings containing assembly code
-    instructions. On initialisation of an instance, the list should
-    be updated as necessary, and will then be joined together by
-    calling super().__init__() to produce a single string containing
-    the assembly code instructions to be written to the output file.
+    All non-abstract subclasses should have an asm variable that
+    contains the asm instructions for that command. The write method
+    can then be used to write these instructions into the provided
+    output file.
 
     Methods
     -------
@@ -17,7 +16,8 @@ class Command(ABC):
     """
     @abstractmethod
     def __init__(self):
-        self._asm = "".join(self._instructions)
+        self._asm = None
+        raise NotImplementedError
 
     def write(self, out_file):
         out_file.write(self._asm)
