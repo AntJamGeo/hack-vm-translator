@@ -1,6 +1,6 @@
 # Hack Virtual Machine Translator
 
-The Hack Virtual Machine Translator is used in the second stage of a two-stage compilation process of a program written in an object-oriented programming language.
+The Hack Virtual Machine Translator is used in the second stage of a two-stage compilation process (first stage uses the [Jack Compiler](https://github.com/AntJamGeo/jack-compiler)) of a program written in an object-oriented programming language.
 
 This translator takes .vm files that have been produced in the first stage of compilation of a program and combines them into a single .asm file to be ran on the Hack computer, a simple computer that is built in the first part of the nand2tetris course (references below).
 
@@ -11,6 +11,10 @@ The translator requires a .vm file or a directory containing .vm files to be pro
 To use, clone this repository and run `python3 <path to translator.py> <path to target .vm file or directory>`. For example, if the current working directory is the hack-vm-translator directory and we add
 * `example.vm` to the directory, running `python3 translator.py example.vm` will produce `example.asm` in the hack-vm-translator directory;
 * a directory called `example` to the directory, running `python3 translator.py example` will produce `example.asm` in the `example` directory.
+
+## Related Projects
+* Hack Assembler: https://github.com/AntJamGeo/hack-assembler
+* Jack Compiler: https://github.com/AntJamGeo/jack-compiler
 
 ## References
 * nand2tetris Website: https://www.nand2tetris.org/
